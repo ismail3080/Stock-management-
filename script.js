@@ -13,7 +13,9 @@ function searchItem() {
 function addItem() {
     let itemName = document.getElementById("itemName").value;
     let quantity = parseInt(document.getElementById("quantity").value);
-    let price = parseFloat(document.getElementById("price").value);
+    let buyingPrice = parseFloat(document.getElementById("addItemBuyingPrice").value);
+    let sellingPrice = parseFloat(document.getElementById("addItemSellingPrice").value);
+    let priceDifference = parseFloat(document.getElementById("addItemPriceDifference").value);
     let currency = document.getElementById("currency").value;
     let reference = generateReference(); // Generate reference number
     let barcode = generateBarcode(); // Generate barcode
@@ -23,8 +25,11 @@ function addItem() {
         reference: reference,
         name: itemName,
         quantity: quantity,
-        price: price,
+        buyingPrice: buyingPrice,
+        sellingPrice: sellingPrice,
+        priceDifference: priceDifference,
         currency: currency,
+        // image: itemImage,
         barcode: barcode
     };
 
@@ -51,7 +56,7 @@ function displayItems(itemArray) {
         itemCard.classList.add("item-card");
 
         let name = document.createElement("p");
-        name.textContent = item.name;
+        name.textContent = "Name: " + item.name;
 
         let reference = document.createElement("p");
         reference.textContent = "Reference: " + item.reference;
@@ -59,8 +64,14 @@ function displayItems(itemArray) {
         let quantity = document.createElement("p");
         quantity.textContent = "Quantity: " + item.quantity;
 
-        let price = document.createElement("p");
-        price.textContent = "Price: " + item.currency + " " + item.price.toFixed(2);
+        let buyingPrice = document.createElement("p");
+        buyingPrice.textContent = "Buying Price: " + item.buyingPrice;
+
+        let sellingPrice = document.createElement("p");
+        sellingPrice.textContent = "Selling Price: " + item.sellingPrice;
+
+        let priceDifference = document.createElement("p");
+        priceDifference.textContent = "Price Difference: " + item.priceDifference;
 
         let barcodeImg = document.createElement("img");
         barcodeImg.src = ""; // Set the source initially to avoid broken image icon
@@ -70,7 +81,9 @@ function displayItems(itemArray) {
         itemCard.appendChild(name);
         itemCard.appendChild(reference);
         itemCard.appendChild(quantity);
-        itemCard.appendChild(price);
+        itemCard.appendChild(buyingPrice);
+        itemCard.appendChild(sellingPrice);
+        itemCard.appendChild(priceDifference);
 
         itemListDiv.appendChild(itemCard);
 
@@ -86,9 +99,43 @@ function displayItems(itemArray) {
 function printTickets() {
     window.print();
 }
+
+function showEditBlock() {
+    document.getElementById("editBlock").style.display = "block";
+}
+function saveChanges() {
+    let reference = document.getElementById("editReference").value;
+    let quantity = parseInt(document.getElementById("editQuantity").value);
+    let buyingPrice = parseFloat(document.getElementById("editBuyingPrice").value);
+    let sellingPrice = parseFloat(document.getElementById("editSellingPrice").value);
+    let priceDifference = parseFloat(document.getElementById("editPriceDifference").value);
+
+    // Find the item with the given reference
+    let itemIndex = items.findIndex(item => item.reference === reference);
+    if (itemIndex !== -1) {
+        // Update quantity, buying price, selling price, and price difference
+        items[itemIndex].quantity = quantity;
+        items[itemIndex].buyingPrice = buyingPrice;
+        items[itemIndex].sellingPrice = sellingPrice;
+        items[itemIndex].priceDifference = priceDifference;
+        // Display updated items
+        displayItems(items);
+
+        // Save changes to the database or backend here
+        // This could involve making an API call to update the item in the database
+        // Example:
+        // updateItemInDatabase(items[itemIndex]);
+    }
+
+    // Hide the edit block after saving changes
+    document.getElementById("editBlock").style.display = "none";
+}
+
+
+
 function exportToExcel() {
     // Extract necessary fields from items
-    let itemsData = items.map(({ name, reference, quantity, price }) => ({ name, reference, quantity, price }));
+    let itemsData = items.map(({ name, reference, quantity, buyingPrice, sellingPrice, priceDifference }) => ({ name, reference, quantity, buyingPrice, sellingPrice, priceDifference }));
 
     // Convert data to worksheet
     let worksheet = XLSX.utils.json_to_sheet(itemsData);
@@ -112,7 +159,7 @@ function exportSearchedItemsToExcel() {
     });
 
     // Extract necessary fields from filtered items
-    let itemsData = filteredItems.map(({ name, reference, quantity, price }) => ({ name, reference, quantity, price }));
+    let itemsData = filteredItems.map(({ name, reference, quantity, buyingPrice, sellingPrice, priceDifference }) => ({ name, reference, quantity, buyingPrice, sellingPrice, priceDifference }));
 
     // Convert data to worksheet
     let worksheet = XLSX.utils.json_to_sheet(itemsData);
