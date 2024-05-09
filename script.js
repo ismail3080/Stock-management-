@@ -15,7 +15,6 @@ function addItem() {
     let quantity = parseInt(document.getElementById("quantity").value);
     let price = parseFloat(document.getElementById("price").value);
     let currency = document.getElementById("currency").value;
-    // let itemImage = document.getElementById("itemImage").files[0];
     let reference = generateReference(); // Generate reference number
     let barcode = generateBarcode(); // Generate barcode
 
@@ -26,7 +25,6 @@ function addItem() {
         quantity: quantity,
         price: price,
         currency: currency,
-        // image: itemImage,
         barcode: barcode
     };
 
@@ -52,10 +50,6 @@ function displayItems(itemArray) {
         let itemCard = document.createElement("div");
         itemCard.classList.add("item-card");
 
-        // let image = document.createElement("img");
-        // image.src = URL.createObjectURL(item.image);
-        // image.alt = item.name;
-
         let name = document.createElement("p");
         name.textContent = item.name;
 
@@ -69,10 +63,10 @@ function displayItems(itemArray) {
         price.textContent = "Price: " + item.currency + " " + item.price.toFixed(2);
 
         let barcodeImg = document.createElement("img");
+        barcodeImg.src = ""; // Set the source initially to avoid broken image icon
         barcodeImg.id = "barcode-" + item.reference; // Use unique ID for each barcode
-        itemCard.appendChild(barcodeImg);
 
-        itemCard.appendChild(image);
+        itemCard.appendChild(barcodeImg); // Append barcode image to the item card
         itemCard.appendChild(name);
         itemCard.appendChild(reference);
         itemCard.appendChild(quantity);
@@ -88,15 +82,16 @@ function displayItems(itemArray) {
         });
     });
 }
+
+function printTickets() {
+    window.print();
+}
 function exportToExcel() {
-    // Exclude barcode from items data
-    // let itemsWithoutBarcode = items.map(({ barcode, ...rest }) => rest);
+    // Extract necessary fields from items
+    let itemsData = items.map(({ name, reference, quantity, price }) => ({ name, reference, quantity, price }));
 
-    // // Log items without barcode to verify
-    // console.log("Items without barcode:", itemsWithoutBarcode);
-
-    // // Convert items array to worksheet
-    // let worksheet = XLSX.utils.json_to_sheet(itemsWithoutBarcode);
+    // Convert data to worksheet
+    let worksheet = XLSX.utils.json_to_sheet(itemsData);
 
     // Create workbook
     let workbook = XLSX.utils.book_new();
@@ -105,19 +100,9 @@ function exportToExcel() {
     // Generate Excel file
     let today = new Date();
     let fileName = "items_" + today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate() + ".xlsx";
-
-    // Convert workbook to binary string
-    let excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-
-    // Create blob object from binary string
-    let blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-
-    // Create download link and trigger click
-    let downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(blob);
-    downloadLink.download = fileName;
-    downloadLink.click();
+    XLSX.writeFile(workbook, fileName);
 }
+
 function exportSearchedItemsToExcel() {
     let searchTerm = document.getElementById("searchInput").value.toLowerCase();
     let filteredItems = items.filter(item => {
@@ -126,8 +111,11 @@ function exportSearchedItemsToExcel() {
                item.barcode.toLowerCase().includes(searchTerm);
     });
 
-    // Convert filtered items array to worksheet
-    let worksheet = XLSX.utils.json_to_sheet(filteredItems);
+    // Extract necessary fields from filtered items
+    let itemsData = filteredItems.map(({ name, reference, quantity, price }) => ({ name, reference, quantity, price }));
+
+    // Convert data to worksheet
+    let worksheet = XLSX.utils.json_to_sheet(itemsData);
 
     // Create workbook
     let workbook = XLSX.utils.book_new();
@@ -136,67 +124,5 @@ function exportSearchedItemsToExcel() {
     // Generate Excel file
     let today = new Date();
     let fileName = "items_" + searchTerm + "_" + today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate() + ".xlsx";
-
-    // Convert workbook to binary string
-    let excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-
-    // Create blob object from binary string
-    let blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-
-    // Create download link and trigger click
-    let downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(blob);
-    downloadLink.download = fileName;
-    downloadLink.click();
-}
-// Function to handle barcode scanning
-function scanBarcode() {
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector('#barcodeScanner') // Or '#yourElement' (optional)
-        },
-        decoder: {
-            readers: ["ean_reader"] // Change to match the type of barcode you want to scan
-        }
-    }, function (err) {
-        if (err) {
-            console.error("Failed to initialize Quagga: " + err);
-            return;
-        }
-        Quagga.start();
-    });
-
-    Quagga.onDetected(function (result) {
-        let scannedBarcode = result.codeResult.code;
-        console.log("Scanned Barcode:", scannedBarcode);
-        document.getElementById("searchInput").value = scannedBarcode;
-        Quagga.stop();
-        searchItem(); // Trigger search with the scanned barcode
-    });
-}
-// function exportToExcel() {
-//     // Convert items array to worksheet
-//     let worksheet = XLSX.utils.json_to_sheet(items);
-
-//     // Convert images to base64 and add them to the worksheet
-//     items.forEach(item => {
-//         let image = item.image;
-//         if (image) {
-//             let reader = new FileReader();
-//             reader.readAsDataURL(image);
-//             reader.onloadend = function() {
-//                 let base64Data = reader.result.split(",")[1];
-//                 XLSX.utils.sheet_add_image(worksheet, "C" + (items.indexOf(item) + 2), base64Data, { 
-//                     /* Specify image properties such as width, height, etc. if needed */ 
-//                 });
-//                 if (items.indexOf(item) === items.length - 1) {
-//                     // Generate Excel file when all images are added
-//                     generateExcelFile(worksheet);
-//                 }
-//             }
-//         }
-//     });
-
+    XLSX.writeFile(workbook, fileName);
 }
