@@ -46,7 +46,6 @@ function generateReference() {
     // Generate a random reference number (for demonstration purposes)
     return 'REF' + Math.floor(Math.random() * 1000);
 }
-
 function displayItems(itemArray) {
     let itemListDiv = document.getElementById("itemList");
     itemListDiv.innerHTML = ""; // Clear previous items
@@ -65,35 +64,63 @@ function displayItems(itemArray) {
         quantity.textContent = "Quantity: " + item.quantity;
 
         let buyingPrice = document.createElement("p");
-        buyingPrice.textContent = "Buying Price: " + item.buyingPrice;
+        buyingPrice.textContent = "Buying Price: " + item.buyingPrice + " " + item.currency; // Include currency
 
         let sellingPrice = document.createElement("p");
-        sellingPrice.textContent = "Selling Price: " + item.sellingPrice;
+        sellingPrice.textContent = "Selling Price: " + item.sellingPrice + " " + item.currency; // Include currency
 
         let priceDifference = document.createElement("p");
-        priceDifference.textContent = "Price Difference: " + item.priceDifference;
+        priceDifference.textContent = "Price Difference: " + item.priceDifference + " " + item.currency; // Include currency
 
-        let barcodeImg = document.createElement("img");
-        barcodeImg.src = ""; // Set the source initially to avoid broken image icon
-        barcodeImg.id = "barcode-" + item.reference; // Use unique ID for each barcode
+        let downloadButton = document.createElement("button");
+        downloadButton.textContent = "Download Ticket";
+        downloadButton.onclick = function() {
+            downloadTicket(item);
+        };
 
-        itemCard.appendChild(barcodeImg); // Append barcode image to the item card
         itemCard.appendChild(name);
         itemCard.appendChild(reference);
         itemCard.appendChild(quantity);
         itemCard.appendChild(buyingPrice);
         itemCard.appendChild(sellingPrice);
         itemCard.appendChild(priceDifference);
+        itemCard.appendChild(downloadButton);
 
         itemListDiv.appendChild(itemCard);
-
-        // Generate and display barcode
-        JsBarcode("#barcode-" + item.reference, item.barcode, {
-            format: "CODE128", // Choose the barcode format (CODE128, CODE39, etc.)
-            displayValue: false, // Whether to display the value below the barcode
-            height: 40 // Height of the barcode
-        });
     });
+}
+
+function downloadTicket(item) {
+    let ticketHTML = generateTicketHTML(item);
+    let blob = new Blob([ticketHTML], { type: 'text/html' });
+    let link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = 'ticket_' + item.reference + '.html';
+    link.click();
+}
+
+function generateTicketHTML(item) {
+    let ticketHTML = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Ticket</title>
+            <style>
+                /* Add your ticket styling here */
+            </style>
+        </head>
+        <body>
+            <h1>Ticket for ${item.name}</h1>
+            <p>Reference: ${item.reference}</p>
+            <p>Buying Price: ${item.buyingPrice} ${item.currency}</p>
+            <p>Selling Price: ${item.sellingPrice} ${item.currency}</p>
+            <p>Price Difference: ${item.priceDifference} ${item.currency}</p>
+        </body>
+        </html>
+    `;
+    return ticketHTML;
 }
 
 function printTickets() {
