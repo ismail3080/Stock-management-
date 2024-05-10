@@ -90,41 +90,43 @@ function displayItems(itemArray) {
     });
 }
 
+
 function downloadTicket(item) {
     let ticketHTML = generateTicketHTML(item);
-    let blob = new Blob([ticketHTML], { type: 'text/html' });
-    let link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.download = 'ticket_' + item.reference + '.html';
-    link.click();
+
+    const options = {
+        margin: 1,
+        filename: 'ticket_' + item.reference + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: {
+            unit: 'in',
+            format: 'letter',
+            orientation: 'portrait'
+        }
+    };
+
+    html2pdf().set(options).from(ticketHTML).save();
 }
 
 function generateTicketHTML(item) {
+    // Create a canvas element to generate the barcode
+    let canvas = document.createElement('canvas');
+    JsBarcode(canvas, item.barcode);
+    let barcodeDataURL = canvas.toDataURL();
+
+    // Construct the ticket HTML
     let ticketHTML = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Ticket</title>
-            <style>
-                /* Add your ticket styling here */
-            </style>
-        </head>
-        <body>
+        <div id="content">
             <h1>Ticket for ${item.name}</h1>
             <p>Reference: ${item.reference}</p>
             <p>Buying Price: ${item.buyingPrice} ${item.currency}</p>
             <p>Selling Price: ${item.sellingPrice} ${item.currency}</p>
             <p>Price Difference: ${item.priceDifference} ${item.currency}</p>
-        </body>
-        </html>
+            <img src="${barcodeDataURL}" alt="Barcode">
+        </div>
     `;
     return ticketHTML;
-}
-
-function printTickets() {
-    window.print();
 }
 
 function showEditBlock() {
