@@ -47,6 +47,12 @@ form {
     width: 100%;
     box-sizing: border-box;
 }
+#barcode-scanner {
+    width: 100%; /* Adjust width as needed */
+    height: auto; /* Let the height adjust based on the camera feed */
+    max-width: 640px; /* Maximum width for the camera window */
+    margin-bottom: 20px; /* Add some space below the camera window */
+}
 
 form input,
 form select {

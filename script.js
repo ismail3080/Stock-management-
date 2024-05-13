@@ -1,4 +1,5 @@
 let items = []; // Array to store items
+let barcodeCounter = 0; // Counter to ensure uniqueness of barcodes
 
 function searchItem() {
     let searchTerm = document.getElementById("searchInput").value.toLowerCase();
@@ -18,7 +19,14 @@ function addItem() {
     let priceDifference = parseFloat(document.getElementById("addItemPriceDifference").value);
     let currency = document.getElementById("currency").value;
     let reference = generateReference(); // Generate reference number
-    let barcode = generateBarcode(); // Generate barcode
+    let barcode = generateBarcode({ // Generate barcode with item information
+        itemName: itemName,
+        quantity: quantity,
+        buyingPrice: buyingPrice,
+        sellingPrice: sellingPrice,
+        priceDifference: priceDifference,
+        currency: currency
+    });
 
     // Create new item object
     let newItem = {
@@ -29,7 +37,6 @@ function addItem() {
         sellingPrice: sellingPrice,
         priceDifference: priceDifference,
         currency: currency,
-        // image: itemImage,
         barcode: barcode
     };
 
@@ -37,10 +44,32 @@ function addItem() {
     displayItems(items); // Display updated list of items
 }
 
-function generateBarcode() {
-    // Generate a random barcode number (for demonstration purposes)
-    return 'BARCODE' + Math.floor(Math.random() * 1000);
+function generateBarcode(item) {
+    barcodeCounter++; // Increment the counter for unique barcode
+    let barcodeData = {
+        itemName: item.itemName,
+        quantity: item.quantity,
+        buyingPrice: item.buyingPrice,
+        sellingPrice: item.sellingPrice,
+        priceDifference: item.priceDifference,
+        currency: item.currency,
+        uniqueIdentifier: barcodeCounter // Ensure uniqueness
+    };
+    // Encode item information as JSON string
+    let encodedInfo = JSON.stringify(barcodeData);
+
+    // Convert JSON string to base64 to reduce barcode size
+    let encodedBase64 = btoa(encodedInfo);
+
+    return encodedBase64;
 }
+
+function generateReference() {
+    // Generate a random reference number (for demonstration purposes)
+    return 'REF' + Math.floor(Math.random() * 1000);
+}
+
+// The rest of your code remains unchanged
 
 function generateReference() {
     // Generate a random reference number (for demonstration purposes)
@@ -72,6 +101,9 @@ function displayItems(itemArray) {
         let priceDifference = document.createElement("p");
         priceDifference.textContent = "Price Difference: " + item.priceDifference + " " + item.currency; // Include currency
 
+        let barcode = document.createElement("p");
+        barcode.textContent = "Barcode: " + item.barcode;
+
         let downloadButton = document.createElement("button");
         downloadButton.textContent = "Download Ticket";
         downloadButton.onclick = function() {
@@ -84,6 +116,7 @@ function displayItems(itemArray) {
         itemCard.appendChild(buyingPrice);
         itemCard.appendChild(sellingPrice);
         itemCard.appendChild(priceDifference);
+        itemCard.appendChild(barcode);
         itemCard.appendChild(downloadButton);
 
         itemListDiv.appendChild(itemCard);
@@ -110,6 +143,8 @@ function downloadTicket(item) {
 }
 
 function generateTicketHTML(item) {
+
+    // -------------------------------
     // Create a canvas element to generate the barcode
     let canvas = document.createElement('canvas');
     JsBarcode(canvas, item.barcode);
@@ -201,4 +236,38 @@ function exportSearchedItemsToExcel() {
     let today = new Date();
     let fileName = "items_" + searchTerm + "_" + today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate() + ".xlsx";
     XLSX.writeFile(workbook, fileName);
+}
+
+
+function scanBarcode() {
+    // Show the video element
+    document.getElementById('barcodeScanner').style.display = 'block';
+
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector("#barcodeScanner"),
+            constraints: {
+                width: 640,
+                height: 480,
+                facingMode: "environment" // Use rear camera
+            },
+        },
+        decoder: {
+            readers: ["ean_reader", "upc_reader"]
+        }
+    }, function (err) {
+        if (err) {
+            console.error("Failed to initialize Quagga:", err);
+            return;
+        }
+        Quagga.start();
+    });
+
+    Quagga.onDetected(function (result) {
+        let barcode = result.codeResult.code;
+        Quagga.stop();
+        handleBarcodeScan(barcode);
+    });
 }
