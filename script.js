@@ -116,7 +116,7 @@ function displayItems(itemArray) {
         itemCard.appendChild(buyingPrice);
         itemCard.appendChild(sellingPrice);
         itemCard.appendChild(priceDifference);
-        itemCard.appendChild(barcode);
+        // itemCard.appendChild(barcode);
         itemCard.appendChild(downloadButton);
 
         itemListDiv.appendChild(itemCard);
@@ -155,9 +155,7 @@ function generateTicketHTML(item) {
         <div id="content">
             <h1>Ticket for ${item.name}</h1>
             <p>Reference: ${item.reference}</p>
-            <p>Buying Price: ${item.buyingPrice} ${item.currency}</p>
-            <p>Selling Price: ${item.sellingPrice} ${item.currency}</p>
-            <p>Price Difference: ${item.priceDifference} ${item.currency}</p>
+            <p> Price: ${item.sellingPrice} ${item.currency}</p>
             <img src="${barcodeDataURL}" alt="Barcode">
         </div>
     `;
